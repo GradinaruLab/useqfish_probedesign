@@ -1,0 +1,5 @@
+biopython
+primer3-py
+numpy
+pandas
+flask

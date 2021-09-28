@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+<p>
+	{% with messages = get_flashed_messages() %}
+	  {% if messages %}
+		<ul class=flashes>
+		{% for message in messages %}
+		  <li>{{ message }}</li>
+		{% endfor %}
+		</ul>
+	  {% endif %}
+	{% endwith %}
+</p>
+
+{% endblock %}
+
+{% block body %}
+<div class="content"> 
+    <h1 style="text-align: center">Probe Designer</h1>
+
+    <form action="/" method="POST">
+        <label for="gene_id">Gene ID:</label>
+        <input type="text" name="gene_id" id="content" required=True><br>
+        <label for="gene_name">Gene Name:</label>
+        <input type="text" name="gene_name" id="content" required=True><br>
+        <label for="hairpin_id">Hairpin ID:</label>
+        <input type="number" name="hairpin_id" required=True><br>
+        <label for="email">Email:</label>
+        <input type=email name="email" required=True><br>
+        <input type="submit" value="Design Probe"><br>
+    </form>
+
+    <form action="/parameters" method="GET">
+        <input type="submit" value="Change Parameters">
+    </form>
+    
+</div>
+{% endblock %}
+
