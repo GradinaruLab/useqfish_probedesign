@@ -16,8 +16,8 @@ def designProbes(gene_id="", gene_name="", hairpin_id=None, email=None,
                 prb_length=20, gc_range=[40, 60], 
                 hits_thresh=5, num_offtar_thresh=0, prb_space=1, dg_thresh=-9, 
                 spacer = ['ta','at'], to_excel=False):
-    """ Creates an Excel file containing probe designs for a given gene.
-
+    """ Creates an Excel file in result_path containing probe designs for a given gene.
+    # TODO: fill in descriptions of arguments
     Args:
         gene_id:
         gene_name:
@@ -34,7 +34,6 @@ def designProbes(gene_id="", gene_name="", hairpin_id=None, email=None,
         Entrez.email=email
     # retrieve target sequence from genbank by using accession id
     handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
-    #print(handle.read())
     target = SeqIO.read(handle, "genbank")
     if gene_name not in target.description.lower():
         print('Target name and accession number are not matched!')
