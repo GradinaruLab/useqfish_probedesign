@@ -38,6 +38,7 @@ def useqFISH():
         gene_name = request.form.get('gene_name')
         gene_id = request.form.get('gene_id')
         sequence = request.form.get('sequence')
+        barcode = request.form.get('barcode')
         gene_host = request.form.get('gene_host')
         email = request.form.get('email')
 
@@ -57,7 +58,7 @@ def useqFISH():
                         primer_end=primer_end,
                         padlock_start=padlock_start,
                         padlock_end=padlock_end,
-                        barcode_path=os.path.join(os.getcwd(),"db/mouse/barcodes/barcodes.xlsx"),
+                        barcode=barcode,
                         db=os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna"), 
                         result_path=app.config['RESULT_PATH'],
                         prb_length=prb_length,

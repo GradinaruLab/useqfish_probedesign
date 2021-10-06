@@ -49,7 +49,6 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
             cds_start = feature.location._start.position
             cds_end = feature.location._end.position
 
-    ## probe design
     # create a fasta file including all candidates
     prbs = findAllCandidates(target, prb_length, result_path)
     num_prbs = len(prbs)
@@ -128,7 +127,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
 
 def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
                 sequence="", db=os.getcwd(), barcode_path=os.getcwd(), 
-                barcode_num=44, result_path=os.getcwd(), 
+                barcode_num=44, barcode="", result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], primer_end="TAATGTTATCTT",
                 padlock_start="ACATTA", padlock_end="AAGATA", spacer1="attta",
                 spacer2 = "atta", prb_space=1, dg_thresh=-9, 
@@ -152,9 +151,10 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     if email:
         Entrez.email = email
 
-    barcode_df = pd.read_excel(barcode_path, index_col=0)
-    barcode_db = barcode_df['barcode'].values.tolist()
-    barcode = barcode_db[barcode_num-1]
+    if not barcode:
+        barcode_df = pd.read_excel(barcode_path, index_col=0)
+        barcode_db = barcode_df['barcode'].values.tolist()
+        barcode = barcode_db[barcode_num-1]
 
     # Get Sequence
     if not sequence:
