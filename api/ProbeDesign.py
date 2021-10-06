@@ -15,7 +15,6 @@ Entrez.email = "mjjang@caltech.edu"
 gene_id = "NM_009891.2"
 gene_name = "chat"
 gene_host = "mus musculus"
-gene_synonym = []
 sequence = ""
 
 # if retrieve target sequence from genbank make this empty
@@ -37,13 +36,13 @@ padlock_end = "AAGATA"
 spacer1 = "attta"
 spacer2 = "atta"
 
-barcode_df = pd.read_excel("probe_design/barcodes.xlsx", index_col=0)
+barcode_df = pd.read_excel("db/mouse/barcodes/barcodes.xlsx", index_col=0)
 barcode_db = barcode_df['barcode'].values.tolist()
 barcode = barcode_db[barcode_num-1]
 
 
-def ProbeBowtie2(fastafile, db='probe_design/refseq_mouse/mouse_refseq_rna', \
-    result_path='probe_design/prbs_candidates_alignment_result.sam', \
+def ProbeBowtie2(fastafile, db='db/mouse/mouse_refseq_rna', \
+    result_path='useqFISH_probe_design_files/prbs_candidates_alignment_result.sam', \
         score_min = 'G,20,8'):
     subprocess.check_call(['bowtie2', '--very-sensitive-local', '-f', '--no-sq', '--no-hd', '--reorder', '--score-min', score_min, \
         '-x', db, '-U', fastafile, '-S', result_path])
@@ -51,7 +50,7 @@ def ProbeBowtie2(fastafile, db='probe_design/refseq_mouse/mouse_refseq_rna', \
 
 
 def IsUnique(samfile_path, num_prbs=0):
-    # with open("probe_design/prbs_alignment_result.sam", 'rb') as samfile:
+    # with open("useqFISH_probe_design_files/prbs_alignment_result.sam", 'rb') as samfile:
     # with open(samfile_path, "rb") as samfile:
     #     for line in samfile:
     #         if line.decode().find('XS') > -1:
@@ -127,18 +126,19 @@ if __name__=="__main__":
         prbs.append(temp_rec)
 
     num_prbs = len(prbs)
-    count = SeqIO.write(prbs, "probe_design/prbs_candidates.fasta", "fasta")
+    count = SeqIO.write(prbs, "useqFISH_probe_design_files/prbs_candidates.fasta", "fasta")
     print("Converted %i records" % count)
 
     ## bowtie2 alignment
-    ProbeBowtie2("probe_design/prbs_candidates.fasta", score_min="G,10,4")
+    ProbeBowtie2("useqFISH_probe_design_files/prbs_candidates.fasta", score_min="G,10,4")
 
 
     ## parse sam file to get mapq and
     ## find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
-    bad_unique = IsUnique("probe_design/prbs_candidates_alignment_result.sam", num_prbs)
-
+    bad_unique = IsUnique("useqFISH_probe_design_files/prbs_candidates_alignment_result.sam", num_prbs)
+    with open("originalout.txt", 'w') as f:
+        print(bad_unique, file=f)
 
     ## basic filtering
     print(" 1. filtering GC contents, Tm, repeats, dG ...") 
@@ -181,14 +181,14 @@ if __name__=="__main__":
             + spacer1 + barcode + spacer2 + padlock_end, '%i' % (i+1), '', '')
         primers.append(primer_rec)
         padlocks.append(padlock_rec)
-    count = SeqIO.write(primers, "probe_design/primers.fasta", "fasta")
-    count = SeqIO.write(padlocks, "probe_design/padlocks.fasta", "fasta")
+    count = SeqIO.write(primers, "useqFISH_probe_design_files/primers.fasta", "fasta")
+    count = SeqIO.write(padlocks, "useqFISH_probe_design_files/padlocks.fasta", "fasta")
     print("Converted %i records" % count)
 
-    ProbeBowtie2("probe_design/primers.fasta", result_path="probe_design/primers_candidates_alignment_results.sam")
-    ProbeBowtie2("probe_design/padlocks.fasta", result_path="probe_design/padlocks_candidates_alignment_results.sam")
-    bad_unique_primers = IsUnique("probe_design/primers_candidates_alignment_results.sam", num_prbs)
-    bad_unique_padlocks = IsUnique("probe_design/padlocks_candidates_alignment_results.sam", num_prbs)
+    ProbeBowtie2("useqFISH_probe_design_files/primers.fasta", result_path="useqFISH_probe_design_files/primers_candidates_alignment_results.sam")
+    ProbeBowtie2("useqFISH_probe_design_files/padlocks.fasta", result_path="useqFISH_probe_design_files/padlocks_candidates_alignment_results.sam")
+    bad_unique_primers = IsUnique("useqFISH_probe_design_files/primers_candidates_alignment_results.sam", num_prbs)
+    bad_unique_padlocks = IsUnique("useqFISH_probe_design_files/padlocks_candidates_alignment_results.sam", num_prbs)
     bad_unique_full = bad_unique_primers | bad_unique_padlocks
     # bad_unique_full = np.zeros_like(bad_unique)
     # for i in range(num_prbs):
@@ -237,4 +237,4 @@ if __name__=="__main__":
         'primer':primers_final, \
         'padlock':padlocks_final}
     resultdf = pd.DataFrame(result)
-    resultdf.to_excel(excel_writer = "probe_design/probes.xlsx")
+    resultdf.to_excel(excel_writer = "useqFISH_probe_design_files/probes.xlsx")
