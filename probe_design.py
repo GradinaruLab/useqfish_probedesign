@@ -138,7 +138,9 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     Args:
         gene_id:
         gene_name:
-        hairpin_id:
+        gene_host:
+        email:
+        sequence:
         db:
         result_path:
         prb_space:
@@ -157,6 +159,7 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     # Get Sequence
     if not sequence:
         # retrieve target sequence from genbank by using accession id
+        print("Looking up gene with accession id")
         handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
         target = SeqIO.read(handle, "genbank")
         if gene_name not in target.description.lower():
@@ -192,11 +195,9 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     print(" 0. aligning probe sequences on refseq database using bowtie2")
     bad_unique = IsUniqueuSeqFISH(os.path.join(result_path, "prbs_candidates_alignment_result.sam"), gene_name, num_prbs)
 
-    with open("modifiedout.txt", 'w') as f:
-        print(bad_unique, file=f)
-
     # basic filtering
     bad_gc, bad_repeats, bad_dg = basicFilter(prbs, num_prbs, prb_length=prb_length, gc_range=gc_range, dg_thresh=dg_thresh)
+
     # Get full probe sequences (primer and padlock) and align
     primers = []
     padlocks = []
@@ -210,12 +211,11 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     count = SeqIO.write(padlocks, os.path.join(result_path, "padlocks.fasta"), "fasta")
     print("Converted %i records" % count)
 
-    ProbeBowtie2(os.path.join(result_path, "primers.fasta"), db=db, result_path=os.path.join(result_path, "primers_candidates_alignment_results.sam"))
-    ProbeBowtie2(os.path.join(result_path, "padlocks.fasta"), db=db, result_path=os.path.join(result_path, "padlocks_candidates_alignment_results.sam"))
-    bad_unique_primers = IsUniqueuSeqFISH(os.path.join(result_path, "primers_candidates_alignment_results.sam"), num_prbs)
-    bad_unique_padlocks = IsUniqueuSeqFISH(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), num_prbs)
+    ProbeBowtie2(os.path.join(result_path, "primers.fasta"), db=db, result_path=os.path.join(result_path, "primers_candidates_alignment_results.sam"), score_min='G,20,8')
+    ProbeBowtie2(os.path.join(result_path, "padlocks.fasta"), db=db, result_path=os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), score_min='G,20,8')
+    bad_unique_primers = IsUniqueuSeqFISH(os.path.join(result_path, "primers_candidates_alignment_results.sam"), gene_name, num_prbs)
+    bad_unique_padlocks = IsUniqueuSeqFISH(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), gene_name, num_prbs)
     bad_unique_full = bad_unique_primers | bad_unique_padlocks
-
 
     # Find bad probes
     bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full
@@ -251,7 +251,7 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
         'padlock':padlocks_final}
     resultdf = pd.DataFrame(result)
     if to_excel:
-        resultdf.to_excel(excel_writer = "probe_design/probes.xlsx")
+        resultdf.to_excel(excel_writer = os.path.join(result_path, "probes.xlsx"))
     return resultdf
 
 
@@ -322,7 +322,7 @@ def findAllCandidates(target, prb_length, result_path):
     for i in range(0, limit-prb_length*2+1):
         start = i
         end = start + prb_length*2
-        temp = target.seq[start:end].reverse_complement()   # reverse complement
+        temp = target.seq[start:end].reverse_complement()
         temp_rec = SeqRecord(temp, '%i' % (i+1), '', '')
         prbs.append(temp_rec)
     count = SeqIO.write(prbs, os.path.join(result_path, "prbs_candidates.fasta"), "fasta")
