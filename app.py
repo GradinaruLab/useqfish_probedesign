@@ -18,76 +18,98 @@ if not os.path.isdir(RESULT_PATH):
 app.config['RESULT_PATH'] = RESULT_PATH
 app.secret_key = "glab"
 
-
-@app.route('/', methods=['POST', 'GET'])
+@app.route('/', methods=['GET','POST'])
 def index():
+    if request.method == 'GET':
+        return render_template("index.html")
+    else:
+        prb_type = request.form['prb_type']
+        if prb_type == 'useqFISH':
+            return render_template('useqFISH.html')
+        elif prb_type == 'HCR3':
+            return render_template('HCR3.html')
+        else:
+            return 'there was an error redirecting to correct prb_type page'
+
+
+@app.route('/useqFISH', methods=['POST', 'GET'])
+def useqFISH():
     if request.method == 'POST':
-        gene_name = request.form['gene_name']
-        gene_id = request.form['gene_id']
-        hairpin_id = int(request.form['hairpin_id'])
-        email = request.form['email']
+        gene_name = request.form.get('gene_name')
+        gene_id = request.form.get('gene_id')
+        sequence = request.form.get('sequence')
+        gene_host = request.form.get('gene_host')
+        email = request.form.get('email')
 
-        session['gene_id'] = gene_id
-        session['gene_name'] = gene_name
-        session['hairpin_id'] = hairpin_id
-        session['email'] = email
+        primer_end = request.form.get('primer_end')
+        padlock_start = request.form.get('padlock_start')
+        padlock_end = request.form.get('padlock_end')
+        prb_length = request.form.get('prb_length', type=int)
+        gc_range = [request.form.get('min_gc', type=int), request.form.get('max_gc', type=int)]
+        prb_space = request.form.get('prb_space', type=int)
+        dg_thresh = request.form.get('dg_thresh', type=int)
+
         try:
-            prb_length =  session['prb_length'] if 'prb_length' in session else 20
-            gc_range = session['gc_range'] if 'gc_range' in session else [40, 60]
-            hits_thresh = session['hits_thresh'] if 'hits_thresh' in session else 5
-            num_offtar_thresh = session['num_offtar_thresh'] if 'num_offtar_thresh' in session else 0
-            prb_space= session['prb_space'] if 'probe_space' in session else 1
-            dg_thresh = session['dg_thresh'] if 'dg_thresh' in session else -9
 
-            resultdf = probe_design.designProbes(gene_id=gene_id, gene_name=gene_name, 
-                        hairpin_id=hairpin_id, email=email, 
+            resultdf = probe_design.designuseqFISHProbes(gene_id=gene_id, gene_name=gene_name, 
+                        gene_host=gene_host, email=email, 
+                        sequence=sequence,
+                        primer_end=primer_end,
+                        padlock_start=padlock_start,
+                        padlock_end=padlock_end,
+                        barcode_path=os.path.join(os.getcwd(),"db/mouse/barcodes/barcodes.xlsx"),
                         db=os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna"), 
                         result_path=app.config['RESULT_PATH'],
                         prb_length=prb_length,
                         gc_range=gc_range,
-                        hits_thresh=hits_thresh,
-                        num_offtar_thresh=num_offtar_thresh,
                         prb_space=prb_space,
                         dg_thresh=dg_thresh)
-            
-            session['result'] = resultdf.to_html()
+    
            
-            return redirect('/results')
+            return render_template('useqFISH.html', result=resultdf.to_html())
 
         except Exception as e: 
             print(traceback.format_exc())
             return 'There was an issue running the Probe Designer.'
 
     else:
-        return render_template("index.html")
+        return render_template("useqFISH.html")
 
 
-@app.route('/parameters', methods=['GET', 'POST'])
-def update_parameters():
+
+@app.route('/HCR3', methods=['POST', 'GET'])
+def HCR3():
     if request.method == 'POST':
+        gene_name = request.form.get('gene_name')
+        gene_id = request.form.get('gene_id')
+        hairpin_id = request.form.get('hairpin_id', type=int)
+        email = request.form.get('email')
+
+        prb_length = request.form.get('prb_length', type=int)
+        gc_range = [request.form.get('min_gc', type=int), request.form.get('max_gc', type=int)]
+        prb_space = request.form.get('prb_space', type=int)
+        dg_thresh = request.form.get('dg_thresh', type=int)
 
         try:
-            session['prb_length'] = request.form.get('prb_length', type=int)
-            session['gc_range'] = [request.form.get('min_gc', type=int), request.form.get('max_gc', type=int)]
-            session['hits_thresh'] = request.form.get('hits_thresh', type=int)
-            session['num_offtar_thresh'] = request.form.get('num_offtar_thresh', type=int)
-            session['prb_space'] = request.form.get('prb_space', type=int)
-            session['dg_thresh'] = request.form.get('dg_thresh', type=int)
-            return redirect('/')
-        
-        except:
-            return 'There was an issue updating the parameters'
-            # return f'type of prb_length is {type(session["prb_legnth"])}'
-    else:
-        return render_template('parameters.html')
 
+            resultdf = probe_design.designHCR3Probes(gene_id=gene_id, gene_name=gene_name, 
+                        hairpin_id=hairpin_id, email=email, 
+                        db=os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna"), 
+                        result_path=app.config['RESULT_PATH'],
+                        prb_length=prb_length,
+                        gc_range=gc_range,
+                        prb_space=prb_space,
+                        dg_thresh=dg_thresh)
 
-@app.route('/results', methods=['GET', 'POST'])
-def get_results():
-    if request.method == 'GET':
-        return render_template('results.html', result = session['result'] )
+            return render_template('HCR3.html', result=resultdf.to_html())
+
+        except Exception as e: 
+            print(traceback.format_exc())
+            return 'There was an issue running the Probe Designer.'
+
     else:
-        return redirect('/results')
+        return render_template("HCR3.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)

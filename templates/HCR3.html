@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+<p>
+	{% with messages = get_flashed_messages() %}
+	  {% if messages %}
+		<ul class=flashes>
+		{% for message in messages %}
+		  <li>{{ message }}</li>
+		{% endfor %}
+		</ul>
+	  {% endif %}
+	{% endwith %}
+</p>
+
+{% endblock %}
+
+{% block body %}
+
+  <form action="/HCR3" method="POST">
+    <h1 style="text-align: center">HCR3 Probe Designer</h1>
+    <div class="row">
+      <div class="col">
+        <h3>Inputs</h3>
+        <label for="gene_name">Gene Name:</label>
+        <input type="text" name="gene_name" id="content" required=True><br>
+        <label for="gene_id">Gene ID:</label>
+        <input type="text" name="gene_id" id="content" required=True><br>
+        <label for="hairpin_id">Hairpin ID:</label>
+        <input type="number" name="hairpin_id" required=True><br>
+        <label for="email">Email:</label>
+        <input type=email name="email" required=True><br>
+      </div>
+  
+      <div class="col">
+        <h3>Advanced Parameters</h3>
+        <label for="prb_length">Probe Legnth:</label>
+        <input type="number" name="prb_length" id="content" value="20" required=True><br>
+        <label for="min_gc">GC Range:</label>
+        <input type="number" name="min_gc" value="40" required=True>
+        <label for="max_gc"> to </label>
+        <input type="number" name="max_gc" value="60" required=True><br>
+        <label for="hits_thresh">Hits Thresh:</label>
+        <input type="number" name="hits_thresh" value="5"><br required=True>
+        <label for="num_offtar_thresh">Num Offtar Thresh:</label>
+        <input type="number" name="num_offtar_thresh" value="0" required=True><br>
+        <label for="prb_space">Probe Space:</label>
+        <input type="number" name="prb_space" value="1" required=True><br>
+        <label for="dg_thresh">DG Thresh:</label>
+        <input type="number" name="dg_thresh" value="-9" required=True>
+      </div>
+
+      <div class="col">
+        <input type="submit" name="submit" value="Design Probe">
+      </div>
+
+    </div>
+
+  </form>
+
+  {% if result %}
+
+  <div class="row"> 
+    <h1 style="text-align: center">Probe Design Done!</h1>
+    <!-- <form>
+        <input type="button" value="Download" onClick="window.location.href='{{ result }}'">
+    </form> -->
+    {{ result | safe }}
+  </div>
+  {% endif %}
+
+{% endblock %}
+

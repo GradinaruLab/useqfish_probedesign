@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+
+{% block head %}
+
+<p>
+	{% with messages = get_flashed_messages() %}
+	  {% if messages %}
+		<ul class=flashes>
+		{% for message in messages %}
+		  <li>{{ message }}</li>
+		{% endfor %}
+		</ul>
+	  {% endif %}
+	{% endwith %}
+</p>
+
+{% endblock %}
+
+{% block body %}
+
+  <form action="/useqFISH" method="POST">
+    <h1 style="text-align: center">uSeqFISH Probe Designer</h1>
+    <div class="row">
+      <div class="col">
+        <h3>Inputs</h3>
+        <label for="gene_name">Gene Name:</label>
+        <input type="text" name="gene_name" id="content"><br>
+        Please enter either Gene ID OR Sequence, NOT both
+        <label for="gene_id">Gene ID:</label>
+        <input type="text" name="gene_id" id="content" required=True><br>
+        OR <br>
+        <label for="sequence">Sequence:</label>
+        <input type="text" name="sequence"><br>
+        <label for="barcode">Barcode:</label>
+        <input type="text" name="barcode"><br>
+        <label for="gene_host">Gene Host:</label>
+        <input type="text" name="gene_host" required=True><br>
+        <label for="email">Email:</label>
+        <input type=email name="email" required=True><br>
+      </div>
+  
+      <div class="col">
+        <h3>Advanced Parameters</h3>
+        <label for="primer_end">Primer End:</label>
+        <input type="text" name="primer_end" value="TAATGTTATCTT" required=True><br>
+        <label for="padlock_start">Padlock Start:</label>
+        <input type="text" name="padlock_start" value="ACATTA" required=True><br>
+        <label for="padlock_end">Padlock End:</label>
+        <input type="text" name="padlock_end" value="AAGATA" required=True><br>
+        <label for="prb_length">Probe Legnth:</label>
+        <input type="number" name="prb_length" id="content" value="20" required=True><br>
+        <label for="min_gc">GC Range:</label>
+        <input type="number" name="min_gc" value="40" required=True>
+        <label for="max_gc"> to </label>
+        <input type="number" name="max_gc" value="60" required=True><br>
+        <label for="prb_space">Probe Space:</label>
+        <input type="number" name="prb_space" value="1" required=True><br>
+        <label for="dg_thresh">DG Thresh:</label>
+        <input type="number" name="dg_thresh" value="-9" required=True><br>
+      </div>
+    </div>
+
+    <div class="row">
+      <button type="submit">Design Probe</button>
+    </div>
+
+  </form>
+
+  {% if result %}
+
+  <div class="row"> 
+    <h1 style="text-align: center">Probe Design Done!</h1>
+    <!-- <form>
+        <input type="button" value="Download" onClick="window.location.href='{{ result }}'">
+    </form> -->
+    {{ result | safe }}
+  </div>
+  {% endif %}
+
+{% endblock %}

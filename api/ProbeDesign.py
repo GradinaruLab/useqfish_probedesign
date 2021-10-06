@@ -36,6 +36,7 @@ padlock_end = "AAGATA"
 spacer1 = "attta"
 spacer2 = "atta"
 
+
 barcode_df = pd.read_excel("db/mouse/barcodes/barcodes.xlsx", index_col=0)
 barcode_db = barcode_df['barcode'].values.tolist()
 barcode = barcode_db[barcode_num-1]
@@ -78,13 +79,12 @@ def IsUnique(samfile_path, num_prbs=0):
                 if gene_name in search_result.description.lower():
                     variants.append(hit_id)
                 else:
-                    bad_unique[i] = 1
-                
+                    bad_unique[i] = 1           
 
     return bad_unique
 
 
-if __name__=="__main__":
+def designuseqFISHProbes():
 
     if not sequence:
         # retrieve target sequence from genbank by using accession id
@@ -137,15 +137,12 @@ if __name__=="__main__":
     ## find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
     bad_unique = IsUnique("useqFISH_probe_design_files/prbs_candidates_alignment_result.sam", num_prbs)
-    with open("originalout.txt", 'w') as f:
-        print(bad_unique, file=f)
 
     ## basic filtering
     print(" 1. filtering GC contents, Tm, repeats, dG ...") 
     GC = np.zeros((2, num_prbs))
     repeats = np.zeros((2, num_prbs))
     dg = np.zeros((2, num_prbs))
-
 
     for i in range(num_prbs):
         GC[1,i] = (prbs[i].seq[0:prb_length].count("G") \
@@ -238,3 +235,5 @@ if __name__=="__main__":
         'padlock':padlocks_final}
     resultdf = pd.DataFrame(result)
     resultdf.to_excel(excel_writer = "useqFISH_probe_design_files/probes.xlsx")
+
+    return resultdf

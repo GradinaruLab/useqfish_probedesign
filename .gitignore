@@ -1,0 +1,6 @@
+db/*
+*.fasta
+*.sam
+*.xlsx
+*.xml
+*.pyc
