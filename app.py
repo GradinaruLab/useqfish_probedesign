@@ -35,6 +35,7 @@ def index():
 @app.route('/useqFISH', methods=['POST', 'GET'])
 def useqFISH():
     if request.method == 'POST':
+        species = request.form.get("species")
         gene_name = request.form.get('gene_name')
         gene_id = request.form.get('gene_id')
         sequence = request.form.get('sequence')
@@ -50,16 +51,20 @@ def useqFISH():
         prb_space = request.form.get('prb_space', type=int)
         dg_thresh = request.form.get('dg_thresh', type=int)
 
+        db = getdb(species)
+
         try:
 
-            resultdf = probe_design.designuseqFISHProbes(gene_id=gene_id, gene_name=gene_name, 
-                        gene_host=gene_host, email=email, 
+            resultdf = probe_design.designuseqFISHProbes(gene_id=gene_id, 
+                        gene_name=gene_name, 
+                        gene_host=gene_host, 
+                        email=email, 
                         sequence=sequence,
                         primer_end=primer_end,
                         padlock_start=padlock_start,
                         padlock_end=padlock_end,
                         barcode=barcode,
-                        db=os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna"), 
+                        db=db, 
                         result_path=app.config['RESULT_PATH'],
                         prb_length=prb_length,
                         gc_range=gc_range,
@@ -81,6 +86,7 @@ def useqFISH():
 @app.route('/HCR3', methods=['POST', 'GET'])
 def HCR3():
     if request.method == 'POST':
+        species = request.form.get("species")
         gene_name = request.form.get('gene_name')
         gene_id = request.form.get('gene_id')
         hairpin_id = request.form.get('hairpin_id', type=int)
@@ -91,11 +97,15 @@ def HCR3():
         prb_space = request.form.get('prb_space', type=int)
         dg_thresh = request.form.get('dg_thresh', type=int)
 
+        db = getdb(species)
+
         try:
 
-            resultdf = probe_design.designHCR3Probes(gene_id=gene_id, gene_name=gene_name, 
-                        hairpin_id=hairpin_id, email=email, 
-                        db=os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna"), 
+            resultdf = probe_design.designHCR3Probes(gene_id=gene_id, 
+                        gene_name=gene_name, 
+                        hairpin_id=hairpin_id, 
+                        email=email, 
+                        db=db, 
                         result_path=app.config['RESULT_PATH'],
                         prb_length=prb_length,
                         gc_range=gc_range,
@@ -110,6 +120,15 @@ def HCR3():
 
     else:
         return render_template("HCR3.html")
+
+
+def getdb(species):
+    if species == "mouse":
+        return os.path.join(os.getcwd(), "db/mouse/mouse_refseq_rna")
+    elif species =="macaque":
+        return os.path.join(os.getcwd(), "db/macaque/macaque_refseq_rna")
+    else:
+        raise ValueError("No dataase for selected species")
 
 
 if __name__ == "__main__":
