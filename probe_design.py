@@ -260,7 +260,7 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
 
 def ProbeBowtie2(fastafile, db=os.path.join(os.getcwd(), 'mouse_refseq_rna'), 
                  result_path="prbs_candidates_alignment_result.sam", 
-                 score_min='G,10,4'):
+                 score_min='G,20,8'):
     """
     runs bowtie2 to create alignment results from a fasta file
     """
