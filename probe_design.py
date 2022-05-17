@@ -71,9 +71,9 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     init_seq = GetInitiatorSeq(hairpin_id)
     prbs_full = []
     for i in range(num_prbs):
-        full_rec = SeqRecord(init_seq[0:int(len(init_seq)/2)]+spacer[0]+prbs[i].seq[prb_length:prb_length*2], '%i-1' % (i+1), '', '')
+        full_rec = SeqRecord(init_seq[0:int(len(init_seq)/2)]+spacer[0]+prbs[i].seq[prb_length:prb_length*2], '%i' % (2*i+1), '', '')
         prbs_full.append(full_rec)
-        full_rec = SeqRecord(prbs[i].seq[0:prb_length]+spacer[1]+init_seq[int(len(init_seq)/2):len(init_seq)], '%i-2' % (i+1), '', '')
+        full_rec = SeqRecord(prbs[i].seq[0:prb_length]+spacer[1]+init_seq[int(len(init_seq)/2):len(init_seq)], '%i' % (2*i+1), '', '')
         prbs_full.append(full_rec) 
     count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
