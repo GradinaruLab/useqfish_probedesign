@@ -78,7 +78,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
     ProbeBowtie2(os.path.join(result_path, "prbs_candidates_full.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
-    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs)
+    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs*2)
     bad_unique_full = np.zeros_like(bad_unique)
     for i in range(num_prbs):
         if is_unique_full[2*i] == 0 | is_unique_full[2*i+1] == 0:
