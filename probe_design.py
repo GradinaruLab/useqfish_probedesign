@@ -59,7 +59,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     ## parse sam file to get mapq and
     ## find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
-    is_unique = IsUniqueHCR(os.path.join(result_path, "alignment_results.sam"))
+    is_unique = IsUnique(os.path.join(result_path, "alignment_results.sam"))
     bad_unique = np.logical_not(is_unique)
 
 
@@ -78,7 +78,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
     ProbeBowtie2(os.path.join(result_path, "prbs_candidates_full.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
-    is_unique_full = IsUniqueHCR(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
+    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
     bad_unique_full = np.zeros_like(bad_unique)
     for i in range(num_prbs):
         if is_unique_full[2*i] == 0 | is_unique_full[2*i+1] == 0:
@@ -278,19 +278,8 @@ def GetInitiatorSeq(hairpin_id=2, I_id=2):
                     ['CTCACTCCCAATCTCTATCTACCCTACAAATCCAAT', 'CACTTCATATCACTCACTCCCAATCTCTATCTACCC']]
     return init_seqs[hairpin_id-1][I_id-1]
 
-def IsUniqueHCR(samfile_path):
-    is_unique = []
-    with open(samfile_path, "rb") as samfile:
-        for line in samfile:
-            if line.decode().find('XS') > -1:
-                is_unique.append(0)
-            else:
-                is_unique.append(1)
-    return np.array(is_unique, dtype=bool)
-
-def IsUniqueuSeqFISH(samfile_path, gene_name, num_prbs=0):
-    """
-    """
+def IsUnique(samfile_path, num_prbs=0):
+    # find hits (ids) from alignment 
     hits = [[] for _ in range(num_prbs)]
     # print(hits)
     with open(samfile_path, "rb") as samfile:
@@ -309,9 +298,10 @@ def IsUniqueuSeqFISH(samfile_path, gene_name, num_prbs=0):
                 if gene_name in search_result.description.lower():
                     variants.append(hit_id)
                 else:
-                    bad_unique[i] = 1    
+                    bad_unique[i] = 1
 
     return bad_unique
+
 
 def findAllCandidates(target, prb_length, result_path):
     """ finds all candidate probes
