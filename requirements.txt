@@ -2,4 +2,4 @@ biopython
 primer3-py
 numpy
 pandas
-bowtie2git
+bowtie2
