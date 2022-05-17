@@ -6,8 +6,9 @@ if not os.path.isdir(RESULT_PATH):
     os.mkdir(RESULT_PATH)
 
 # inputs
-gene_id = "NM_182993.2"
-gene_name = "slc17a7"
+email = "mjjang@caltech.edu"
+gene_id = "NM_001260752.1"
+gene_name = "vip"
 gene_synonym = []
 hairpin_id = 2
 
@@ -26,4 +27,5 @@ resultdf = probe_design.designHCR3Probes(gene_id=gene_id, gene_name=gene_name,
                         gc_range=gc_range,
                         prb_space=prb_space,
                         dg_thresh=dg_thresh,
-                        to_excel=True)
+                        to_excel=True,
+                        email=email)

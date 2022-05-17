@@ -9,7 +9,6 @@ from primer3 import calcHairpin     #dependency: primer3-py
 
 import numpy as np
 import pandas as pd
-from sqlalchemy.orm.query import AliasOption
 
 
 def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
@@ -54,13 +53,12 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     num_prbs = len(prbs)
 
     ## bowtie2 alignment
-    ProbeBowtie2(os.path.join(result_path, "prbs_candidates.fasta"),db=db, result_path=os.path.join(result_path, "alignment_results.sam"))
+    ProbeBowtie2(os.path.join(result_path, "prbs_candidates.fasta"),db=db, result_path=os.path.join(result_path, "prbs_candidates_alignment_results.sam"))
 
     ## parse sam file to get mapq and
     ## find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
-    is_unique = IsUnique(os.path.join(result_path, "alignment_results.sam"), gene_name, num_prbs)
-    bad_unique = np.logical_not(is_unique)
+    bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_results.sam"), gene_name, num_prbs)
 
 
     ## basic filtering
@@ -78,14 +76,14 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
     ProbeBowtie2(os.path.join(result_path, "prbs_candidates_full.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
-    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs*2)
+    bad_unique_each = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs*2)
     bad_unique_full = np.zeros_like(bad_unique)
     for i in range(num_prbs):
-        if is_unique_full[2*i] == 0 | is_unique_full[2*i+1] == 0:
-            bad_unique_full[i] = 1
+        bad_unique_full[i] = bad_unique_each[2*i] | bad_unique_each[2*i+1]
 
     ## Find bad probes
     bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full
+    # bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique
 
     # Select probe sequences that are apart
     prb_pos = np.argwhere(np.logical_not(bad_inds))
@@ -125,7 +123,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     return resultdf
 
 
-def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
+def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
                 sequence="", db=os.getcwd(), barcode_path=os.getcwd(), 
                 barcode_num=44, barcode="", result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], primer_end="TAATGTTATCTT",

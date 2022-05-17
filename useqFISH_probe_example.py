@@ -6,9 +6,9 @@ if not os.path.isdir(RESULT_PATH):
     os.mkdir(RESULT_PATH)
 
 ## input
-email = "jvendemiatti@hmc.edu"
-gene_id = "NM_009891.2"
-gene_name = "chat"
+email = "mjjang@caltech.edu"
+gene_id = "NM_172399.3"
+gene_name = "ndnf"
 gene_host = "mus musculus"
 sequence = ""
 
@@ -31,7 +31,7 @@ padlock_end = "AAGATA"
 spacer1 = "attta"
 spacer2 = "atta"
 
-resultdf = probe_design.designuseqFISHProbes(gene_id=gene_id, 
+resultdf = probe_design.designUSeqFISHProbes(gene_id=gene_id, 
                                 gene_name=gene_name, 
                                 gene_host=gene_host,
                                 email=email,
