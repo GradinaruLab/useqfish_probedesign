@@ -59,7 +59,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     ## parse sam file to get mapq and
     ## find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
-    is_unique = IsUnique(os.path.join(result_path, "alignment_results.sam"), num_prbs)
+    is_unique = IsUnique(os.path.join(result_path, "alignment_results.sam"), gene_name, num_prbs)
     bad_unique = np.logical_not(is_unique)
 
 
@@ -78,7 +78,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
     ProbeBowtie2(os.path.join(result_path, "prbs_candidates_full.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
-    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), num_prbs)
+    is_unique_full = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs)
     bad_unique_full = np.zeros_like(bad_unique)
     for i in range(num_prbs):
         if is_unique_full[2*i] == 0 | is_unique_full[2*i+1] == 0:
@@ -193,7 +193,7 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     # parse sam file to get mapq and
     # find only unique probe sequences
     print(" 0. aligning probe sequences on refseq database using bowtie2")
-    bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_result.sam"), num_prbs)
+    bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_result.sam"), gene_name, num_prbs)
 
     # basic filtering
     bad_gc, bad_repeats, bad_dg = basicFilter(prbs, num_prbs, prb_length=prb_length, gc_range=gc_range, dg_thresh=dg_thresh)
@@ -213,8 +213,8 @@ def designuseqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
 
     ProbeBowtie2(os.path.join(result_path, "primers.fasta"), db=db, result_path=os.path.join(result_path, "primers_candidates_alignment_results.sam"), score_min='G,20,8')
     ProbeBowtie2(os.path.join(result_path, "padlocks.fasta"), db=db, result_path=os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), score_min='G,20,8')
-    bad_unique_primers = IsUnique(os.path.join(result_path, "primers_candidates_alignment_results.sam"), num_prbs)
-    bad_unique_padlocks = IsUnique(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), num_prbs)
+    bad_unique_primers = IsUnique(os.path.join(result_path, "primers_candidates_alignment_results.sam"), gene_name, num_prbs)
+    bad_unique_padlocks = IsUnique(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), gene_name, num_prbs)
     bad_unique_full = bad_unique_primers | bad_unique_padlocks
 
     # Find bad probes
@@ -278,7 +278,7 @@ def GetInitiatorSeq(hairpin_id=2, I_id=2):
                     ['CTCACTCCCAATCTCTATCTACCCTACAAATCCAAT', 'CACTTCATATCACTCACTCCCAATCTCTATCTACCC']]
     return init_seqs[hairpin_id-1][I_id-1]
 
-def IsUnique(samfile_path, num_prbs=0):
+def IsUnique(samfile_path, gene_name, num_prbs=0):
     # find hits (ids) from alignment 
     hits = [[] for _ in range(num_prbs)]
     # print(hits)
