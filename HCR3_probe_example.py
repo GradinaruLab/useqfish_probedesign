@@ -7,15 +7,15 @@ if not os.path.isdir(RESULT_PATH):
 
 # inputs
 email = "mjjang@caltech.edu"
-gene_id = "NM_001260752.1"
-gene_name = "vip"
+gene_id = "NM_008077.5"
+gene_name = "gad1"
 gene_synonym = []
 hairpin_id = 2
 
 # other parameters
 prb_length = 20
 gc_range = [40, 60]
-prb_space = 1
+prb_space = 5
 dg_thresh = -9
 
 # run probe design
