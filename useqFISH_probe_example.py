@@ -7,9 +7,9 @@ if not os.path.isdir(RESULT_PATH):
 
 ## input
 email = "mjjang@caltech.edu"
-gene_id = "NM_001032867.1"
-gene_name = "tyrobp"
-gene_host = "macaca mulatta"
+gene_id = "NM_011638.4"
+gene_name = "tfrc"
+gene_host = "mus musculus"
 sequence = ""
 
 # if retrieve target sequence from genbank make this empty
@@ -17,7 +17,7 @@ sequence = ""
 # sequence = "ATGGTGAGCAAGGGCGAGGAGGATAACATGGCCTCTCTCCCAGCGACACATGAGTTACACATCTTTGGCTCCATCAACGGTGTGGACTTTGACATGGTGGGTCAGGGCACCGGCAATCCAAATGATGGTTATGAGGAGTTAAACCTGAAGTCCACCAAGGGTGACCTCCAGTTCTCCCCCTGGATTCTGGTCCCTCATATCGGGTATGGCTTCCATCAGTACCTGCCCTACCCTGACGGGATGTCGCCTTTCCAGGCCGCCATGGTAGATGGCTCCGGATACCAAGTCCATCGCACAATGCAGTTTGAAGATGGTGCCTCCCTTACTGTTAACTACCGCTACACCTACGAGGGAAGCCACATCAAAGGAGAGGCCCAGGTGAAGGGGACTGGTTTCCCTGCTGACGGTCCTGTGATGACCAACTCGCTGACCGCTGCGGACTGGTGCAGGTCGAAGAAGACTTACCCCAACGACAAAACCATCATCAGTACCTTTAAGTGGAGTTACACCACTGGAAATGGCAAGCGCTACCGGAGCACTGCGCGGACCACCTACACCTTTGCCAAGCCAATGGCGGCTAACTATCTGAAGAACCAGCCGATGTACGTGTTCCGTAAGACGGAGCTCAAGCACTCCAAGACCGAGCTCAACTTCAAGGAGTGGCAAAAGGCCTTTACCGATGTGATGGGCATGGACGAGCTGTACAAGTGAG"
 
 
-ugi_num = 46
+ugi_num = 1
 
 ## parameters
 prb_length = 20
@@ -36,7 +36,8 @@ resultdf = probe_design.designUSeqFISHProbes(gene_id=gene_id,
                                 gene_host=gene_host,
                                 email=email,
                                 sequence=sequence,
-                                db="db/rhesus_macaque/mmul_10",
+                                # db="db/rhesus_macaque/mmul_10",
+                                db="db/mouse/mouse_refseq_rna",
                                 ugi_path="ugi.xlsx",
                                 ugi_num=ugi_num,
                                 result_path=RESULT_PATH,

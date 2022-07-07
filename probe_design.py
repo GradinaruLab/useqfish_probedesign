@@ -11,8 +11,8 @@ import numpy as np
 import pandas as pd
 
 
-def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
-                db=os.getcwd(), result_path=os.getcwd(), 
+def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None, 
+                sequence="", db=os.getcwd(), result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], prb_space=1, dg_thresh=-9, 
                 spacer = ['ta','at'], to_excel=False):
     """ Creates an Excel file in result_path containing probe designs for a given gene.
@@ -31,22 +31,29 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     """
     if email:
         Entrez.email=email
-    # retrieve target sequence from genbank by using accession id
-    handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
-    target = SeqIO.read(handle, "genbank")
-    if gene_name not in target.description.lower():
-        print('Target name and accession number are not matched!')
-        handle.close()
-        exit()
-    handle.close()
 
-    # find the coding region of the target
-    cds_start = 0
-    cds_end = 0
-    for feature in target.features:
-        if feature.type == 'CDS':
-            cds_start = feature.location._start.position
-            cds_end = feature.location._end.position
+    if not sequence:
+        # retrieve target sequence from genbank by using accession id
+        handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
+        target = SeqIO.read(handle, "genbank")
+        if gene_name not in target.description.lower():
+            print('Target name and accession number are not matched!')
+            handle.close()
+            exit()
+        handle.close()
+
+        # find the coding region of the target
+        cds_start = 0
+        cds_end = 0
+        for feature in target.features:
+            if feature.type == 'CDS':
+                cds_start = feature.location._start.position
+                cds_end = feature.location._end.position
+    else:
+        target = SeqRecord(
+            Seq(sequence.upper()),
+            name=gene_name,
+        )
 
     # create a fasta file including all candidates
     prbs = findAllCandidates(target, prb_length, result_path)
@@ -124,8 +131,8 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
 
 
 def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
-                sequence="", db=os.getcwd(), barcode_path=os.getcwd(), 
-                barcode_num=44, barcode="", result_path=os.getcwd(), 
+                sequence="", db=os.getcwd(), ugi_path=os.getcwd(), 
+                ugi_num=1, ugi="", result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], primer_end="TAATGTTATCTT",
                 padlock_start="ACATTA", padlock_end="AAGATA", spacer1="attta",
                 spacer2 = "atta", prb_space=1, dg_thresh=-9, 
@@ -149,10 +156,10 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     if email:
         Entrez.email = email
 
-    if not barcode:
-        barcode_df = pd.read_excel(barcode_path, index_col=0)
-        barcode_db = barcode_df['barcode'].values.tolist()
-        barcode = barcode_db[barcode_num-1]
+    if not ugi:
+        ugi_df = pd.read_excel(ugi_path, index_col=0)
+        ugi_db = ugi_df['ugi'].values.tolist()
+        ugi = ugi_db[ugi_num-1]
 
     # Get Sequence
     if not sequence:
@@ -202,7 +209,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     for i in range(num_prbs):
         primer_rec = SeqRecord(prbs[i].seq[0:prb_length] + primer_end, '%i' % (i+1), '', '')
         padlock_rec = SeqRecord(padlock_start + prbs[i].seq[prb_length:prb_length*2] \
-            + spacer1 + barcode + spacer2 + padlock_end, '%i' % (i+1), '', '')
+            + spacer1 + ugi + spacer2 + padlock_end, '%i' % (i+1), '', '')
         primers.append(primer_rec)
         padlocks.append(padlock_rec)
     count = SeqIO.write(primers, os.path.join(result_path, "primers.fasta"), "fasta")
