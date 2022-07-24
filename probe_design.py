@@ -10,6 +10,7 @@ from primer3 import calcHairpin     #dependency: primer3-py
 import numpy as np
 import pandas as pd
 
+import nupack
 
 def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None, 
                 sequence="", db=os.getcwd(), result_path=os.getcwd(), 
@@ -222,8 +223,16 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     bad_unique_padlocks = IsUnique(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), gene_name, num_prbs)
     bad_unique_full = bad_unique_primers | bad_unique_padlocks
 
+
+    ## nupack secondary structure analysis
+    bad_secondary = []
+    for primer, padlock in zip(primers, padlocks):
+        bad_primer = secondaryFilter(str(primer.seq), part='primer', linker_length=len(primer_end))
+        bad_padlock = secondaryFilter(str(padlock.seq), part='padlock', linker_length=len(padlock_start))
+        bad_secondary.append(bad_primer | bad_padlock)
+
     # Find bad probes
-    bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full
+    bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full + bad_secondary
 
     # Select probe sequences that are apart
     prb_pos = np.argwhere(np.logical_not(bad_inds))
@@ -358,3 +367,25 @@ def basicFilter(prbs, num_prbs, prb_length=20, gc_range=[40,60], dg_thresh=-9):
     bad_dg = bad_dg[0,:] | bad_dg[1,:]
     
     return bad_gc, bad_repeats, bad_dg
+
+
+def secondaryFilter(seq, part='primer', linker_length=6):
+    prb_seq = nupack.Strand(seq, name='prb')
+    model = nupack.Model(material='dna', celsius=37, sodium=0.39, magnesium=0.0)
+    set = nupack.ComplexSet(strands=[prb_seq])
+    result = nupack.complex_analysis(complexes=set, model=model, compute=['mfe'])
+    secondstruct = str(result['(prb)'].mfe[0].structure)
+
+    bad = True
+    if secondstruct.count('(') == 0:
+            bad = False
+    else:
+        secondstruct.replace(')','(').replace('+','(')
+        splitted = secondstruct.split('(')
+        if (part=='primer') and (splitted[-1].count('.')>linker_length):
+            bad = False
+        if (part=='padlock') and (splitted[0].count('.')>linker_length) and (splitted[-1].count('.')>linker_length):
+            bad = False
+
+    return bad
+

@@ -7,10 +7,11 @@ if not os.path.isdir(RESULT_PATH):
 
 # inputs
 email = "mjjang@caltech.edu"
-gene_id = "NM_001108434.1"
-gene_name = "fech"
+gene_id = "NM_001317043.1"
+gene_name = "vegfa"
 gene_synonym = []
-hairpin_id = 2
+hairpin_id = 5
+sequence=""
 
 # other parameters
 prb_length = 20
@@ -21,7 +22,7 @@ dg_thresh = -9
 # run probe design
 resultdf = probe_design.designHCR3Probes(gene_id=gene_id, gene_name=gene_name, 
                         hairpin_id=hairpin_id, 
-                        db=os.path.join("db/rat/rn4"),
+                        db=os.path.join("db/rat/mratbn7.2"),
                         result_path=RESULT_PATH,
                         prb_length=prb_length,
                         gc_range=gc_range,
