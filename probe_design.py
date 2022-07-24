@@ -190,6 +190,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
         cds_end = len(sequence)
 
     # Find all probe candidates, create a fasta file
+    print("- finding all potential probes ...")
     prbs = findAllCandidates(target, prb_length, result_path)
     num_prbs = len(prbs)
 
@@ -202,6 +203,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_result.sam"), gene_name, num_prbs)
 
     # basic filtering
+    print(" 1. filtering GC contents, Tm, repeats, dG ...") 
     bad_gc, bad_repeats, bad_dg = basicFilter(prbs, num_prbs, prb_length=prb_length, gc_range=gc_range, dg_thresh=dg_thresh)
 
     # Get full probe sequences (primer and padlock) and align
@@ -225,6 +227,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
 
 
     ## nupack secondary structure analysis
+    print(" 2. secondary structure modeling ...")
     bad_secondary = []
     for primer, padlock in zip(primers, padlocks):
         bad_primer = secondaryFilter(str(primer.seq), part='primer', linker_length=len(primer_end))
@@ -320,7 +323,6 @@ def IsUnique(samfile_path, gene_name, num_prbs=0):
 def findAllCandidates(target, prb_length, result_path):
     """ finds all candidate probes
     """
-    print("- finding all potential probes ...")
     prbs = []
     limit = len(target.seq)
     for i in range(0, limit-prb_length*2+1):
@@ -336,7 +338,6 @@ def findAllCandidates(target, prb_length, result_path):
 
 
 def basicFilter(prbs, num_prbs, prb_length=20, gc_range=[40,60], dg_thresh=-9):
-    print(" 1. filtering GC contents, Tm, repeats, dG ...") 
     GC = np.zeros((2, num_prbs))
     repeats = np.zeros((2, num_prbs))
     dg = np.zeros((2, num_prbs))

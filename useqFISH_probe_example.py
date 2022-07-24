@@ -7,8 +7,8 @@ if not os.path.isdir(RESULT_PATH):
 
 ## input
 email = "mjjang@caltech.edu"
-gene_id = "NM_001289726.1"
-gene_name = "gapdh"
+gene_id = "NM_001291068.1"
+gene_name = "polr2a"
 gene_host = "mus musculus"
 sequence = ""
 
