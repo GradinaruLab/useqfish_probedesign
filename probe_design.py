@@ -248,10 +248,10 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     prb_final_pos = []
     for pos in prb_pos:
         if (pos > cds_start) & (pos+prb_length*2 < cds_end):
-            if len(prb_final_pos) == 0:
-                prb_final_pos.append(pos)
-            elif pos > prb_final_pos[-1] + prb_length*2 + prb_space:
-                prb_final_pos.append(pos)
+            # if len(prb_final_pos) == 0:
+            prb_final_pos.append(pos)
+            # elif pos > prb_final_pos[-1] + prb_length*2 + prb_space:
+            #     prb_final_pos.append(pos)
     print(prb_final_pos)
     print('- done! # of final probes: %i' % len(prb_final_pos))
 
@@ -387,7 +387,7 @@ def secondaryFilter(seq, part='primer', linker_length=6):
     if bond_count == 0:
             bad = False
     else:
-        secondstruct.replace(')','(').replace('+','(')
+        secondstruct = secondstruct.replace(')','(').replace('+','(')
         splitted = secondstruct.split('(')
         if (part=='primer') and (splitted[-1].count('.')>linker_length):
             bad = False
