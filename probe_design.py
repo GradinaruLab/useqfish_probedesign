@@ -229,10 +229,12 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     ## nupack secondary structure analysis
     print(" 2. secondary structure modeling ...")
     bad_secondary = []
+    bond_count = []
     for primer, padlock in zip(primers, padlocks):
-        bad_primer = secondaryFilter(str(primer.seq), part='primer', linker_length=len(primer_end))
-        bad_padlock = secondaryFilter(str(padlock.seq), part='padlock', linker_length=len(padlock_start))
+        bad_primer, bond_count_primer = secondaryFilter(str(primer.seq), part='primer', linker_length=len(primer_end))
+        bad_padlock, bond_count_padlock = secondaryFilter(str(padlock.seq), part='padlock', linker_length=len(padlock_start))
         bad_secondary.append(bad_primer | bad_padlock)
+        bond_count.append((bond_count_primer, bond_count_padlock))
 
     # Find bad probes
     bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full + bad_secondary
@@ -257,15 +259,18 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     # recall probe pairs
     primers_final = []
     padlocks_final = []
+    bond_count_final = []
     for pos in prb_final_pos:
         primers_final.append(primers[pos].seq)
         padlocks_final.append('/5Phos/'+padlocks[pos].seq)
+        bond_count_final.append(bond_count[pos])
 
     result = {'name': gene_name, \
         'accession': gene_id, \
         'position':prb_final_pos, \
         'primer':primers_final, \
-        'padlock':padlocks_final}
+        'padlock':padlocks_final, \
+        'bonds (primer, padlock)':bond_count_final}
     resultdf = pd.DataFrame(result)
     if to_excel:
         resultdf.to_excel(excel_writer = os.path.join(result_path, "probes.xlsx"))
@@ -378,7 +383,8 @@ def secondaryFilter(seq, part='primer', linker_length=6):
     secondstruct = str(result['(prb)'].mfe[0].structure)
 
     bad = True
-    if secondstruct.count('(') == 0:
+    bond_count = secondstruct.count('(')
+    if bond_count == 0:
             bad = False
     else:
         secondstruct.replace(')','(').replace('+','(')
@@ -388,5 +394,5 @@ def secondaryFilter(seq, part='primer', linker_length=6):
         if (part=='padlock') and (splitted[0].count('.')>linker_length) and (splitted[-1].count('.')>linker_length):
             bad = False
 
-    return bad
+    return bad, bond_count
 
