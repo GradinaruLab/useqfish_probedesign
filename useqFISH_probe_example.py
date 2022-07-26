@@ -7,12 +7,12 @@ if not os.path.isdir(RESULT_PATH):
 
 ## input
 email = "mjjang@caltech.edu"
-gene_id = "NM_053242.4"
-gene_name = "foxp2"
+gene_id = "NM_009788.4"
+gene_name = "calb1"
 gene_host = "mus musculus"
 sequence = ""
 
-ugi_num = 35
+ugi_num = 62
 
 ## parameters
 prb_length = 20
