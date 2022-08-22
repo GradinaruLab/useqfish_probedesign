@@ -56,6 +56,9 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
             name=gene_name,
         )
 
+        cds_start = 0
+        cds_end = len(sequence)
+
     # create a fasta file including all candidates
     prbs = findAllCandidates(target, prb_length, result_path)
     num_prbs = len(prbs)
@@ -131,7 +134,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     return resultdf
 
 
-def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
+def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
                 sequence="", db=os.getcwd(), ugi_path=os.getcwd(), 
                 ugi_num=1, ugi="", result_path=os.getcwd(), 
                 prb_length=20, gc_range=[40, 60], primer_end="TAATGTTATCTT",
@@ -143,7 +146,6 @@ def designUSeqFISHProbes(gene_id="", gene_name="", gene_host="", email=None,
     Args:
         gene_id:
         gene_name:
-        gene_host:
         email:
         sequence:
         db:

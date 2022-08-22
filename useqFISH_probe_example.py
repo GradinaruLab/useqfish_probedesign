@@ -1,18 +1,17 @@
 import probe_design
 import os
 
-RESULT_PATH = os.path.join(os.getcwd(), "probe_design_files")
+RESULT_PATH = os.path.join(os.getcwd(), "useqFISH_probe_design_files")
 if not os.path.isdir(RESULT_PATH):
     os.mkdir(RESULT_PATH)
 
 ## input
 email = "mjjang@caltech.edu"
-gene_id = "NM_009788.4"
-gene_name = "calb1"
-gene_host = "mus musculus"
-sequence = ""
+gene_id = "NM_001291068.1"
+gene_name = "polr2a"
+sequence = "atggtgagcaagggcgaggagctgttcaccggggtggtgcccatcctggtcgagctggacggcgacgtaaacggccacaagttcagcgtgtccggcgagggcgagggcgatgccacctacggcaagctgaccctgaagttcatctgcaccaccggcaagctgcccgtgccctggcccaccctcgtgaccaccctgacctacggcgtgcagtgcttcagccgctaccccgaccacatgaagcagcacgacttcttcaagtccgccatgcccgaaggctacgtccaggagcgcaccatcttcttcaaggacgacggcaactacaagacccgcgccgaggtgaagttcgagggcgacaccctggtgaaccgcatcgagctgaagggcatcgacttcaaggaggacggcaacatcctggggcacaagctggagtacaactacaacagccacaacgtctatatcatggccgacaagcagaagaacggcatcaaggtgaacttcaagatccgccacaacatcgaggacggcagcgtgcagctcgccgaccactaccagcagaacacccccatcggcgacggccccgtgctgctgcccgacaaccactacctgagcacccagtccgccctgagcaaagaccccaacgagaagcgcgatcacatggtcctgctggagttcgtgaccgccgccgggatcactctcggcatggacgagctgtacaag"
 
-ugi_num = 62
+ugi_num = 1
 
 ## parameters
 prb_length = 20
@@ -28,7 +27,6 @@ spacer2 = "atta"
 
 resultdf = probe_design.designUSeqFISHProbes(gene_id=gene_id, 
                                 gene_name=gene_name, 
-                                gene_host=gene_host,
                                 email=email,
                                 sequence=sequence,
                                 # db="db/rhesus_macaque/mmul_10",
