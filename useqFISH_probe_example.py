@@ -7,11 +7,11 @@ if not os.path.isdir(RESULT_PATH):
 
 ## input
 email = "mjjang@caltech.edu"
-gene_id = "NM_001291068.1"
-gene_name = "polr2a"
-sequence = "atggtgagcaagggcgaggagctgttcaccggggtggtgcccatcctggtcgagctggacggcgacgtaaacggccacaagttcagcgtgtccggcgagggcgagggcgatgccacctacggcaagctgaccctgaagttcatctgcaccaccggcaagctgcccgtgccctggcccaccctcgtgaccaccctgacctacggcgtgcagtgcttcagccgctaccccgaccacatgaagcagcacgacttcttcaagtccgccatgcccgaaggctacgtccaggagcgcaccatcttcttcaaggacgacggcaactacaagacccgcgccgaggtgaagttcgagggcgacaccctggtgaaccgcatcgagctgaagggcatcgacttcaaggaggacggcaacatcctggggcacaagctggagtacaactacaacagccacaacgtctatatcatggccgacaagcagaagaacggcatcaaggtgaacttcaagatccgccacaacatcgaggacggcagcgtgcagctcgccgaccactaccagcagaacacccccatcggcgacggccccgtgctgctgcccgacaaccactacctgagcacccagtccgccctgagcaaagaccccaacgagaagcgcgatcacatggtcctgctggagttcgtgaccgccgccgggatcactctcggcatggacgagctgtacaag"
+gene_id = "XM_015110351.2"
+gene_name = "gad1"
+sequence = ""
 
-ugi_num = 1
+ugi_num = 42
 
 ## parameters
 prb_length = 20
@@ -29,8 +29,8 @@ resultdf = probe_design.designUSeqFISHProbes(gene_id=gene_id,
                                 gene_name=gene_name, 
                                 email=email,
                                 sequence=sequence,
-                                # db="db/rhesus_macaque/mmul_10",
-                                db="db/mouse/mouse_refseq_rna",
+                                db="db/rhesus_macaque/mmul_10",
+                                # db="db/mouse/mouse_refseq_rna",
                                 ugi_path="ugi.xlsx",
                                 ugi_num=ugi_num,
                                 result_path=RESULT_PATH,
