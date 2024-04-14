@@ -5,7 +5,7 @@ from Bio import Align, SeqIO, Entrez, SearchIO, SeqFeature
 from Bio.SeqRecord import SeqRecord
 from Bio.Seq import Seq
 
-from primer3 import calcHairpin     #dependency: primer3-py
+from primer3 import calc_hairpin     #dependency: primer3-py
 
 import numpy as np
 import pandas as pd
@@ -37,7 +37,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
         # retrieve target sequence from genbank by using accession id
         handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
         target = SeqIO.read(handle, "genbank")
-        if gene_name not in target.description.lower():
+        if gene_name.lower() not in target.description.lower():
             print('Target name and accession number are not matched!')
             handle.close()
             exit()
@@ -60,41 +60,34 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
         cds_end = len(sequence)
 
     # create a fasta file including all candidates
-    prbs = findAllCandidates(target, prb_length, result_path)
+    prbs = findAllCandidates(target, prb_length, result_path, gene_name)
     num_prbs = len(prbs)
 
     ## bowtie2 alignment
-    ProbeBowtie2(os.path.join(result_path, "prbs_candidates.fasta"),db=db, result_path=os.path.join(result_path, "prbs_candidates_alignment_results.sam"))
+    ProbeBowtie2(os.path.join(result_path, f"{gene_name}_prbs_candidates.fasta"),db=db,
+                 result_path=os.path.join(result_path, f"{gene_name}_prbs_candidates_alignment_results.sam"))
 
-    ## parse sam file to get mapq and
-    ## find only unique probe sequences
-    print(" 0. aligning probe sequences on refseq database using bowtie2")
-    bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_results.sam"), gene_name, num_prbs)
-
+    ## parse sam file to get mapq
+    print(" 1. filtering GC contents, Tm, repeats, dG ...")
 
     ## basic filtering
     bad_gc, bad_repeats, bad_dg = basicFilter(prbs, num_prbs, prb_length=prb_length, gc_range=gc_range, dg_thresh=dg_thresh)
-
 
     # Get full probe sequences and align
     init_seq = GetInitiatorSeq(hairpin_id)
     prbs_full = []
     for i in range(num_prbs):
-        full_rec = SeqRecord(init_seq[0:int(len(init_seq)/2)]+spacer[0]+prbs[i].seq[prb_length:prb_length*2], '%i' % (2*i+1), '', '')
+        full_rec = SeqRecord(init_seq[0:int(len(init_seq)/2)]+spacer[0]+prbs[i].seq[prb_length:prb_length*2], f'{i+1}-1', '', '')
         prbs_full.append(full_rec)
-        full_rec = SeqRecord(prbs[i].seq[0:prb_length]+spacer[1]+init_seq[int(len(init_seq)/2):len(init_seq)], '%i' % (2*i+1), '', '')
+        full_rec = SeqRecord(prbs[i].seq[0:prb_length]+spacer[1]+init_seq[int(len(init_seq)/2):len(init_seq)], f'{i+1}-2', '', '')
         prbs_full.append(full_rec) 
-    count = SeqIO.write(prbs_full, os.path.join(result_path, "prbs_candidates_full.fasta"), "fasta")
+    count = SeqIO.write(prbs_full, os.path.join(result_path, f"{gene_name}_prbs_candidates_full.fasta"), "fasta")
     print("Converted %i records" % count)
-    ProbeBowtie2(os.path.join(result_path, "prbs_candidates_full.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"))
-    bad_unique_each = IsUnique(os.path.join(result_path, "prbs_candidates_full_alignment_results.sam"), gene_name, num_prbs*2)
-    bad_unique_full = np.zeros_like(bad_unique)
-    for i in range(num_prbs):
-        bad_unique_full[i] = bad_unique_each[2*i] | bad_unique_each[2*i+1]
+    ProbeBowtie2(os.path.join(result_path, f"{gene_name}_prbs_candidates_full.fasta"), db=db,
+                 result_path=os.path.join(result_path, f"{gene_name}_prbs_candidates_full_alignment_results.sam"))
 
-    ## Find bad probes
-    bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full
-    # bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique
+    ## Find basic bad probes
+    bad_inds = bad_gc + bad_repeats + bad_dg
 
     # Select probe sequences that are apart
     prb_pos = np.argwhere(np.logical_not(bad_inds))
@@ -102,6 +95,14 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
     # prb_pos = [ind for sublist in prb_pos for ind in sublist]
     # print(prb_pos)
     # print(len(prb_pos))
+
+    # Check NCBI databank for description matching
+    print(' 2. aligning probe sequences on refseq database using bowtie2')
+    bad_unique = IsUnique(os.path.join(result_path, f"{gene_name}_prbs_candidates_alignment_results.sam"), gene_name, prb_pos)
+    bad_unique_each = IsUnique(os.path.join(result_path, f"{gene_name}_prbs_candidates_full_alignment_results.sam"),
+                               gene_name, prb_pos, full=True)
+    prb_pos = prb_pos[~(bad_unique | bad_unique_each)]
+
 
     # only select sequences within the coding region
     # and sequences that are apart from the adjacent one
@@ -129,7 +130,7 @@ def designHCR3Probes(gene_id="", gene_name="", hairpin_id=None, email=None,
         'probe B':prb_final_B}
     resultdf = pd.DataFrame(result)
     if to_excel:
-        resultdf.to_excel(excel_writer = os.path.join(result_path, "probes.xlsx"))
+        resultdf.to_excel(excel_writer = os.path.join(result_path, f"{gene_name}_probes.xlsx"))
 
     return resultdf
 
@@ -170,7 +171,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
         print("Looking up gene with accession id")
         handle = Entrez.efetch(db="nucleotide", id=gene_id, rettype = "gb", retmode = "text")
         target = SeqIO.read(handle, "genbank")
-        if gene_name not in target.description.lower():
+        if gene_name.lower() not in target.description.lower():
             print('Target name and accession number are not matched!')
             handle.close()
             exit()
@@ -193,16 +194,12 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
 
     # Find all probe candidates, create a fasta file
     print("- finding all potential probes ...")
-    prbs = findAllCandidates(target, prb_length, result_path)
+    prbs = findAllCandidates(target, prb_length, result_path, gene_name)
     num_prbs = len(prbs)
 
     # Bowtie2 alignment
-    ProbeBowtie2(os.path.join(result_path, "prbs_candidates.fasta"), db=db, result_path=os.path.join(result_path, "prbs_candidates_alignment_result.sam"), score_min="G,10,4")
-
-    # parse sam file to get mapq and
-    # find only unique probe sequences
-    print(" 0. aligning probe sequences on refseq database using bowtie2")
-    bad_unique = IsUnique(os.path.join(result_path, "prbs_candidates_alignment_result.sam"), gene_name, num_prbs)
+    ProbeBowtie2(os.path.join(result_path, f"{gene_name}_prbs_candidates.fasta"), db=db,
+                 result_path=os.path.join(result_path, f"{gene_name}_prbs_candidates_alignment_result.sam"), score_min="G,10,4")
 
     # basic filtering
     print(" 1. filtering GC contents, Tm, repeats, dG ...") 
@@ -217,17 +214,15 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
             + spacer1 + ugi + spacer2 + padlock_end, '%i' % (i+1), '', '')
         primers.append(primer_rec)
         padlocks.append(padlock_rec)
-    count = SeqIO.write(primers, os.path.join(result_path, "primers.fasta"), "fasta")
-    count = SeqIO.write(padlocks, os.path.join(result_path, "padlocks.fasta"), "fasta")
+    count = SeqIO.write(primers, os.path.join(result_path, f"{gene_name}_primers.fasta"), "fasta")
+    count = SeqIO.write(padlocks, os.path.join(result_path, f"{gene_name}_padlocks.fasta"), "fasta")
     print("Converted %i records" % count)
 
-    ProbeBowtie2(os.path.join(result_path, "primers.fasta"), db=db, result_path=os.path.join(result_path, "primers_candidates_alignment_results.sam"), score_min='G,20,8')
-    ProbeBowtie2(os.path.join(result_path, "padlocks.fasta"), db=db, result_path=os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), score_min='G,20,8')
-    bad_unique_primers = IsUnique(os.path.join(result_path, "primers_candidates_alignment_results.sam"), gene_name, num_prbs)
-    bad_unique_padlocks = IsUnique(os.path.join(result_path, "padlocks_candidates_alignment_results.sam"), gene_name, num_prbs)
-    bad_unique_full = bad_unique_primers | bad_unique_padlocks
-
-
+    ProbeBowtie2(os.path.join(result_path, f"{gene_name}_primers.fasta"), db=db,
+                 result_path=os.path.join(result_path, f"{gene_name}_primers_candidates_alignment_results.sam"), score_min='G,20,8')
+    ProbeBowtie2(os.path.join(result_path, f"{gene_name}_padlocks.fasta"), db=db,
+                 result_path=os.path.join(result_path, f"{gene_name}_padlocks_candidates_alignment_results.sam"), score_min='G,20,8')
+    
     ## nupack secondary structure analysis
     print(" 2. secondary structure modeling ...")
     bad_secondary = []
@@ -239,11 +234,19 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
         bond_count.append((bond_count_primer, bond_count_padlock))
 
     # Find bad probes
-    bad_inds = bad_gc + bad_repeats + bad_dg + bad_unique + bad_unique_full + bad_secondary
+    bad_inds = bad_gc + bad_repeats + bad_dg + bad_secondary
 
     # Select probe sequences that are apart
     prb_pos = np.argwhere(np.logical_not(bad_inds))
-    prb_pos = np.array(prb_pos.ravel())   
+    prb_pos = np.array(prb_pos.ravel())
+
+    # Check NCBI databank for description matching
+    print(' 3. aligning probe sequences on refseq database using bowtie2')
+    bad_unique = IsUnique(os.path.join(result_path, f"{gene_name}_prbs_candidates_alignment_result.sam"), gene_name, prb_pos)
+    bad_unique_primers = IsUnique(os.path.join(result_path, f"{gene_name}_primers_candidates_alignment_results.sam"), gene_name, prb_pos)
+    bad_unique_padlocks = IsUnique(os.path.join(result_path, f"{gene_name}_padlocks_candidates_alignment_results.sam"), gene_name, prb_pos)
+    bad_unique_full = bad_unique_primers | bad_unique_padlocks
+    prb_pos = prb_pos[~(bad_unique | bad_unique_full)]
 
     # only select sequences within the coding region
     # and sequences that are apart from the adjacent one
@@ -275,7 +278,7 @@ def designUSeqFISHProbes(gene_id="", gene_name="", email=None,
         'bonds (primer, padlock)':bond_count_final}
     resultdf = pd.DataFrame(result)
     if to_excel:
-        resultdf.to_excel(excel_writer = os.path.join(result_path, "probes.xlsx"))
+        resultdf.to_excel(excel_writer = os.path.join(result_path, f"{gene_name}_probes.xlsx"))
     return resultdf
 
 
@@ -302,14 +305,26 @@ def GetInitiatorSeq(hairpin_id=2, I_id=2):
                     ['CTCACTCCCAATCTCTATCTACCCTACAAATCCAAT', 'CACTTCATATCACTCACTCCCAATCTCTATCTACCC']]
     return init_seqs[hairpin_id-1][I_id-1]
 
-def IsUnique(samfile_path, gene_name, num_prbs=0):
+
+def IsUnique(samfile_path, gene_name, prb_pos, full=False):
     # find hits (ids) from alignment 
+    num_prbs = len(prb_pos)
     hits = [[] for _ in range(num_prbs)]
+    if full:
+        hits = [[] for _ in range(num_prbs*2)]
     # print(hits)
     with open(samfile_path, "rb") as samfile:
+        i = 0
         for line in samfile:
             info = line.decode().split('\t')
-            hits[int(info[0])-1].append(info[2])
+            if '-' in info[0]:
+                index = int(info[0][:-2])
+            else:
+                index = int(info[0])-1
+            if index not in prb_pos:
+                continue
+            hits[i].append(info[2])
+            i += 1
     
     # search hitted ids if it is variants of the same gene
     variants = ['*']
@@ -319,7 +334,7 @@ def IsUnique(samfile_path, gene_name, num_prbs=0):
             if hit_id not in variants:
                 handle = Entrez.efetch(db="nucleotide", id=hit_id, rettype="gb", retmode="text")
                 search_result = SeqIO.read(handle, "genbank")
-                if gene_name in search_result.description.lower():
+                if gene_name.lower() in search_result.description.lower():
                     variants.append(hit_id)
                 else:
                     bad_unique[i] = 1
@@ -327,7 +342,7 @@ def IsUnique(samfile_path, gene_name, num_prbs=0):
     return bad_unique
 
 
-def findAllCandidates(target, prb_length, result_path):
+def findAllCandidates(target, prb_length, result_path, gene_name):
     """ finds all candidate probes
     """
     prbs = []
@@ -338,7 +353,7 @@ def findAllCandidates(target, prb_length, result_path):
         temp = target.seq[start:end].reverse_complement()
         temp_rec = SeqRecord(temp, '%i' % (i+1), '', '')
         prbs.append(temp_rec)
-    count = SeqIO.write(prbs, os.path.join(result_path, "prbs_candidates.fasta"), "fasta")
+    count = SeqIO.write(prbs, os.path.join(result_path, f"{gene_name}_prbs_candidates.fasta"), "fasta")
     print("Converted %i records" % count)
 
     return prbs
@@ -364,8 +379,8 @@ def basicFilter(prbs, num_prbs, prb_length=20, gc_range=[40,60], dg_thresh=-9):
                 + prbs[i].seq[prb_length:prb_length*2].count("GGG") \
                     + prbs[i].seq[prb_length:prb_length*2].count("TTTT")
 
-        dg[1,i] = calcHairpin(str(prbs[i].seq[0:prb_length])).dg/1000
-        dg[0,i] = calcHairpin(str(prbs[i].seq[prb_length:prb_length*2])).dg/1000
+        dg[1,i] = calc_hairpin(str(prbs[i].seq[0:prb_length])).dg/1000
+        dg[0,i] = calc_hairpin(str(prbs[i].seq[prb_length:prb_length*2])).dg/1000
 
     bad_gc = (GC < gc_range[0]) | (GC > gc_range[1])
     bad_gc = bad_gc[0,:] | bad_gc[1,:]

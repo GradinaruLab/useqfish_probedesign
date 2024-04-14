@@ -1,5 +1,6 @@
 biopython
 primer3-py
+openpyxl
 numpy
 pandas
 bowtie2
